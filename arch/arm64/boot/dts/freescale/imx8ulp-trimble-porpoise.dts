@@ -123,7 +123,6 @@
 			MX8ULP_PAD_PTD17__PTD17		0x03	/* TX_ON */
 
 			MX8ULP_PAD_PTE7__PTE7		0x03	/* STM_USART_EN */
-			MX8ULP_PAD_PTE22__PTE22		0x03	/* HW_BUSY */
 			MX8ULP_PAD_PTE23__PTE23		0x03	/* MIKI_VCCIO_EN */
 
 			/* LYRA */
@@ -253,6 +252,14 @@
 			MX8ULP_PAD_PTE11__PTE11		0x03	/* USB_VBUS_EN */
 		>;
 	};
+
+	pinctrl_sxsdmah: mm610xgrp {
+		fsl,pins = <
+			MX8ULP_PAD_PTE14__PTE14		0x03	/* HW_RST */
+			MX8ULP_PAD_PTE15__PTE15		0x03	/* HW_WAKE */
+			MX8ULP_PAD_PTE22__PTE22		0x03	/* HW_BUSY */
+		>;
+	};
 };
 
 
@@ -339,9 +346,22 @@
 &usdhc2 { /* Wifi HALO */
 	bus-width = <4>;
 	non-removable;
+	no-sd;
+	fsl,sdio-async-interrupt-enabled;
+	sdhci-caps-mask = <0x0 0x00080000>; /* disable ADMA2 */
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
-	pinctrl-0 = <&pinctrl_usdhc2>;
-	pinctrl-1 = <&pinctrl_usdhc2>;
-	pinctrl-2 = <&pinctrl_usdhc2>;
+	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_sxsdmah>;
+	pinctrl-1 = <&pinctrl_usdhc2>, <&pinctrl_sxsdmah>;
+	pinctrl-2 = <&pinctrl_usdhc2>, <&pinctrl_sxsdmah>;
+        vqmmc-supply = <&reg_vref_1p8v>;
 	status = "okay";
+
+	sx_sdmah: sx-sdmah@0 {
+		compatible = "morse,mm610x";
+		reset-gpios = <&gpioe 14 GPIO_ACTIVE_LOW>; /* HW_RST */
+		power-gpios = <&gpioe 15 GPIO_ACTIVE_HIGH>, <&gpioe 22 GPIO_ACTIVE_HIGH>; /* HW_WAKE, HW_BUSY */
+		status = "okay";
+		reg = <2>;
+		bus-width = <4>;
+	};
 };
