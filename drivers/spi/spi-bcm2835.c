@@ -25,9 +25,7 @@
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
-#include <linux/gpio/consumer.h>
-#include <linux/gpio/machine.h> /* FIXME: using chip internals */
-#include <linux/gpio/driver.h> /* FIXME: using chip internals */
+#include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 #include <linux/spi/spi.h>
 
@@ -1218,6 +1216,7 @@ static int bcm2835_spi_setup_dma(struct spi_controller *ctlr,
 
 static int bcm2835_spi_setup(struct spi_device *spi)
 {
+	int err;
 	struct spi_controller *ctlr = spi->controller;
 	struct bcm2835_spi *bs = spi_controller_get_devdata(ctlr);
 	struct bcm2835_spidev *target = spi_get_ctldata(spi);
@@ -1274,7 +1273,7 @@ static int bcm2835_spi_setup(struct spi_device *spi)
 	 * The SPI core has successfully requested the CS GPIO line from the
 	 * device tree, so we are done.
 	 */
-	if (spi_get_csgpiod(spi, 0))
+	if (gpio_is_valid(spi->cs_gpio))
 		return 0;
 	if (spi_get_chipselect(spi, 0) > 1) {
 		/* error in the case of native CS requested with CS > 1
@@ -1287,33 +1286,27 @@ static int bcm2835_spi_setup(struct spi_device *spi)
 		goto err_cleanup;
 	}
 
-	/*
-	 * Translate native CS to GPIO
-	 *
-	 * FIXME: poking around in the gpiolib internals like this is
-	 * not very good practice. Find a way to locate the real problem
-	 * and fix it. Why is the GPIO descriptor in spi->cs_gpiod
-	 * sometimes not assigned correctly? Erroneous device trees?
-	 */
-
 	/* get the gpio chip for the base */
 	chip = gpiochip_find("pinctrl-bcm2835", chip_match_name);
 	if (!chip)
 		return 0;
 
-	spi_set_csgpiod(spi, 0, gpiochip_request_own_desc(chip,
-							  8 - (spi_get_chipselect(spi, 0)),
-							  DRV_NAME,
-							  GPIO_LOOKUP_FLAGS_DEFAULT,
-							  GPIOD_OUT_LOW));
-	if (IS_ERR(spi_get_csgpiod(spi, 0))) {
-		ret = PTR_ERR(spi_get_csgpiod(spi, 0));
-		goto err_cleanup;
+	/* and calculate the real CS */
+	spi->cs_gpio = chip->base + 8 - spi->chip_select;
+	dev_info(&spi->dev, "setting up native-CS%i as GPIO %i\n",
+	     spi->chip_select, spi->cs_gpio);
+
+	/* set up GPIO as output and pull to the correct level */
+	err = gpio_direction_output(spi->cs_gpio,
+	                (spi->mode & SPI_CS_HIGH) ? 0 : 1);
+	if (err) {
+	    dev_err(&spi->dev,
+	        "could not set CS%i gpio %i as output: %i",
+	        spi->chip_select, spi->cs_gpio, err);
+	    return err;
 	}
 
-	/* and set up the "mode" and level */
-	dev_info(&spi->dev, "setting up native-CS%i to use GPIO\n",
-		 spi_get_chipselect(spi, 0));
+
 
 	return 0;
 
@@ -1334,7 +1327,6 @@ static int bcm2835_spi_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, ctlr);
 
-	ctlr->use_gpio_descriptors = true;
 	ctlr->mode_bits = BCM2835_SPI_MODE_BITS;
 	ctlr->bits_per_word_mask = SPI_BPW_MASK(8);
 	ctlr->num_chipselect = 3;
