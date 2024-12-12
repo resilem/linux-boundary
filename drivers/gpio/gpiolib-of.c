@@ -40,6 +40,7 @@ enum of_gpio_flags {
 	OF_GPIO_PULL_DISABLE = 0x40,
 };
 
+#if 0
 /**
  * of_gpio_named_count() - Count GPIOs for a device
  * @np:		device node to count GPIOs for
@@ -65,6 +66,7 @@ static int of_gpio_named_count(const struct device_node *np,
 {
 	return of_count_phandle_with_args(np, propname, "#gpio-cells");
 }
+#endif
 
 /**
  * of_gpio_spi_cs_get_count() - special GPIO counting for SPI
