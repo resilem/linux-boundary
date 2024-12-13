@@ -17,6 +17,17 @@
 		bootargs = "console=ttyLP3,115200 earlycon";
 	};
 
+	vcc_bt_en: regulator-bt-en {
+		bootph-all;
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_bt_en";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		enable-active-high;
+		gpios = <&gpioe 10 GPIO_ACTIVE_HIGH>; /* BT_EN */
+	};
+
 	reg_vref_1p8v: regulator-vref-1p8v {
 		compatible = "regulator-fixed";
 		regulator-name = "vref-1p8v";
@@ -79,7 +90,7 @@
 	phy-handle = <&ethphy>;
 	status = "okay";
 #if 0
-	phy-reset-gpios = <&gpiof 11 GPIO_ACTIVE_LOW>;
+	phy-reset-gpios = <&gpiof 11 GPIO_ACTIVE_LOW>; /* PHY_RST */
 #endif
 
 	mdio {
@@ -87,10 +98,36 @@
 		#size-cells = <0>;
 
 		ethphy: ethernet-phy@7 {
-			interrupts-extended = <&gpiof 10 IRQ_TYPE_LEVEL_LOW>;
+			interrupts-extended = <&gpiof 10 IRQ_TYPE_LEVEL_LOW>; /* PHY_INT */
 			reg = <7>;
 		};
 	};
+};
+
+&gpiod {
+        gpio-line-names = "", "", "", "", "", 						/* 0-4 */
+			"", "", "", "", "",						/* 5-9 */
+			"", "WAKE_RADIO", "Fastboot", "ENA_MOD", "STAT",		/* 10-14 */
+			"SERVICE", "BAND_MODE", "TX_ON", "", "",			/* 15-19 */
+			"", "", "", "";							/* 20-23 */
+};
+
+&gpioe {
+        gpio-line-names = "", "", "", "", "",						/* 0-4 */
+			"", "WL_IRQ", "STM_USART_EN", "WIFI_RESET", "BT_HOST_WAKE",	/* 5-9 */
+			"BT_EN", "USB_VBUS_EN", "BT_WAKE_IN", "WL_WAKE_IN", "HW_RST",	/* 10-14 */
+			"HW_WAKE", "", "", "", "",					/* 15-19 */
+			"LYRA_RST", "LYRA_BOOT", "HW_BUSY", "MIKI_VCCIO_EN";		/* 20-23 */
+};
+
+&gpiof {
+	gpio-line-names = "", "", "", "", "",   					/* 0-4 */
+			"", "", "", "", "",						/* 5-9 */
+			"PHY_INT", "PHY_RST", "", "", "",				/* 10-14 */
+			"", "", "", "", "", 						/* 15-19 */
+			"STM_RESET", "PH3_BOOT", "", "", "Single_Ant_Port_EN1",		/* 20-24 */
+			"8ULP_LTE_SHDN", "1pps_EN", "WIFI_PDn", "WL_WAKE_OUT", "TP13",	/* 25-29 */
+			"TP15", "TP16";							/* 30-31 */
 };
 
 &haptics {
@@ -114,7 +151,7 @@
 
 	pinctrl_hog_som: hog-somgrp {
                 fsl,pins = <
-			MX8ULP_PAD_PTD12__PTD12		0x03	/* WAKE_RADIO */
+			MX8ULP_PAD_PTD11__PTD11		0x03	/* WAKE_RADIO */
 			MX8ULP_PAD_PTD12__PTD12		0x03	/* Fastboot */
 			MX8ULP_PAD_PTD13__PTD13		0x03	/* ENA_MOD */
 			MX8ULP_PAD_PTD14__PTD14		0x03	/* STAT */
