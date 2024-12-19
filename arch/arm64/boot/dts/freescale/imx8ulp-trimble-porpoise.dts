@@ -127,7 +127,7 @@
 			"", "", "", "", "", 						/* 15-19 */
 			"STM_RESET", "PH3_BOOT", "", "", "Single_Ant_Port_EN1",		/* 20-24 */
 			"8ULP_LTE_SHDN", "1pps_EN", "WIFI_PDn", "WL_WAKE_OUT", "TP13",	/* 25-29 */
-			"TP15", "TP16";							/* 30-31 */
+			"USB_SW", "TP16";						/* 30-31 */
 };
 
 &haptics {
@@ -168,7 +168,7 @@
 			MX8ULP_PAD_PTF26__PTF26		0x03	/* 1pps_EN */
 
                         MX8ULP_PAD_PTF29__PTF29         0x7     /* TP13 */
-                        MX8ULP_PAD_PTF30__PTF30         0x7     /* TP15 */
+                        MX8ULP_PAD_PTF30__PTF30         0x7     /* USB_SW */
                         MX8ULP_PAD_PTF31__PTF31         0x7     /* TP16 */
 
 			MX8ULP_PAD_PTF20__PTF20		0x03	/* STM_RESET */
